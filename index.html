@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>커넥트 이용후기</title>
+<style>
+  :root {
+    --green: #03C75A;
+    --green-dark: #02A94D;
+    --ink: #191F28;
+    --gray: #6B7684;
+    --line: #EAEDF0;
+    --bg: #F5F6F8;
+    --card: #FFFFFF;
+    --radius: 16px;
+    --font: "Apple SD Gothic Neo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); font-family: var(--font); color: var(--ink); }
+  body { margin: 0; padding-bottom: 40px; display: flex; justify-content: center; }
+  /* 콘텐츠 컨테이너 — 자체 폭 기준으로 레이아웃이 반응(Container Query) */
+  .stage {
+    container-type: inline-size;
+    width: 100%; max-width: 1180px; min-height: 100vh;
+    background: var(--bg);
+  }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== 상단 바 ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: #fff; border-bottom: 1px solid var(--line);
+    padding: calc(12px + env(safe-area-inset-top, 0)) 20px 0;
+  }
+  .topbar__brand {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+    padding-bottom: 12px;
+  }
+  .topbar__brand .dot {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--green); color: #fff; font-size: 14px; font-weight: 900;
+    display: grid; place-items: center;
+  }
+  /* 탭 */
+  .tabs { display: flex; gap: 24px; }
+  .tabs a {
+    padding: 10px 0 12px; font-size: 15px; font-weight: 600; color: var(--gray);
+    position: relative;
+  }
+  .tabs a.active { color: var(--ink); font-weight: 800; }
+  .tabs a.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 3px; border-radius: 3px 3px 0 0; background: var(--green);
+  }
+  .tabs a .badge {
+    margin-left: 4px; font-size: 10px; font-weight: 800; color: var(--green);
+    vertical-align: super;
+  }
+
+  /* ===== 히어로 ===== */
+  .hero { padding: calc(28px + env(safe-area-inset-top, 0)) 20px 8px; }
+  .hero h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.35; }
+  .hero h1 b { color: var(--green); }
+  .hero p { margin-top: 8px; font-size: 14px; color: var(--gray); line-height: 1.6; }
+
+  /* ===== 섹션 공통 ===== */
+  section { margin-top: 28px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 20px 12px; }
+  .sec-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.4px; }
+  .sec-head .more { font-size: 13px; color: var(--gray); font-weight: 600; }
+
+  /* ===== 캐러셀(후기 영상) ===== */
+  .carousel { position: relative; }
+  .carousel__track {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 0 20px 4px; scrollbar-width: none;
+  }
+  .carousel__track::-webkit-scrollbar { display: none; }
+  .video-card {
+    flex: 0 0 86%; scroll-snap-align: center;
+    background: var(--card); border-radius: var(--radius); overflow: hidden;
+    box-shadow: 0 4px 20px rgba(17,24,39,.06);
+  }
+  .video-card .frame {
+    position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+  }
+  .video-card .frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video-card .meta { padding: 12px 14px 16px; }
+  .video-card .meta .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; color: var(--green-dark);
+    background: rgba(3,199,90,.1); padding: 3px 8px; border-radius: 6px; margin-bottom: 8px;
+  }
+  .video-card .meta h3 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.4; }
+  .video-card .meta p { margin-top: 4px; font-size: 12px; color: var(--gray); }
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+  .dots span { width: 6px; height: 6px; border-radius: 50%; background: #D5DAE0; transition: .2s; }
+  .dots span.on { width: 18px; border-radius: 3px; background: var(--green); }
+
+  /* ===== 인터뷰 카드 ===== */
+  .interview { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .interview__item {
+    background: var(--card); border-radius: var(--radius); padding: 18px;
+    box-shadow: 0 4px 20px rgba(17,24,39,.06); display: flex; gap: 14px; align-items: flex-start;
+  }
+  .interview__item .avatar {
+    flex: 0 0 52px; width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #03C75A, #00E676);
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px;
+  }
+  .interview__item .txt { flex: 1; min-width: 0; }
+  .interview__item .txt .q { font-size: 12px; color: var(--green-dark); font-weight: 700; }
+  .interview__item .txt h3 { font-size: 15px; font-weight: 700; margin-top: 3px; letter-spacing: -0.3px; }
+  .interview__item .txt p {
+    font-size: 13px; color: var(--gray); margin-top: 5px; line-height: 1.5;
+  }
+  .interview__item .arrow { color: #C4CBD3; font-size: 20px; }
+
+  /* ===== 공식 인스타 그리드 ===== */
+  .insta-head { display: flex; align-items: center; gap: 8px; }
+  .insta-head .ig {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
+  }
+  .insta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 20px; }
+  .insta-grid a { position: relative; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: #E9ECF0; }
+  .insta-grid a img { width: 100%; height: 100%; object-fit: cover; }
+  .insta-grid a .ov {
+    position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgba(0,0,0,.35));
+    display: flex; align-items: flex-end; padding: 8px; color: #fff; font-size: 11px; font-weight: 700;
+  }
+  .insta-cta {
+    margin: 16px 20px 0; text-align: center; padding: 13px;
+    border: 1px solid var(--green); border-radius: 12px;
+    color: var(--green-dark); font-weight: 700; font-size: 14px;
+  }
+  .insta-note {
+    margin: 12px 20px 0; padding: 10px 12px; border-radius: 10px;
+    background: #FFF6E9; color: #B26A00; font-size: 12px; font-weight: 600;
+    line-height: 1.5; display: flex; gap: 6px; align-items: flex-start;
+  }
+  /* 개별 게시물 공식 임베드 그리드 */
+  .insta-embeds { display: grid; grid-template-columns: 1fr; gap: 14px; padding: 0 20px; justify-items: center; }
+  .insta-embeds .instagram-media {
+    width: 100% !important; max-width: 400px !important; min-width: 0 !important; margin: 0 !important;
+  }
+  /* 실제 인스타 임베드 클린 프레임 (3:4, 헤더/좋아요/댓글 등 UI 크롭) */
+  .igwall { display: grid; grid-template-columns: 1fr; gap: 14px; padding: 0 20px; }
+  .igcell {
+    position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 22px;
+    background: #000; box-shadow: 0 4px 20px rgba(17,24,39,.08);
+  }
+  .igcell iframe { position: absolute; top: -56px; left: -6%; width: 112%; height: 1000px; border: 0; }
+
+  /* ===== 하단 배너 ===== */
+  .banner {
+    margin: 32px 20px 0; padding: 22px; border-radius: var(--radius);
+    background: linear-gradient(135deg, #03C75A, #00A94D); color: #fff;
+  }
+  .banner h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; }
+  .banner p { margin-top: 6px; font-size: 13px; opacity: .92; line-height: 1.5; }
+  .banner button {
+    margin-top: 14px; background: #fff; color: var(--green-dark);
+    border: 0; border-radius: 10px; padding: 11px 18px; font-weight: 800; font-size: 14px; cursor: pointer;
+  }
+
+  .foot { text-align: center; color: #A7B0BA; font-size: 11px; margin-top: 30px; line-height: 1.6; }
+
+  /* 상단/하단 배너 — 외부 이미지 요청 없는 인라인 SVG */
+  .promo { display: block; overflow: hidden; background: #0B0C0D; line-height: 0; }
+  .promo__art { display: block; width: 100%; height: auto; aspect-ratio: 1632 / 225; }
+  .promo__art--cta { aspect-ratio: 1632 / 1010; }
+  .promo--top { }
+  .promo-stack { display: grid; gap: 16px; margin-top: 32px; }
+  /* 네이버페이 그린 구분선 */
+  .section-divider {
+    height: 3px; margin: 30px 20px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(3,199,90,0), var(--green) 15%, var(--green) 85%, rgba(3,199,90,0));
+  }
+
+  /* Notion 연결 안내 pill (기획용 표시) */
+  .notion-hint {
+    display: flex; align-items: center; gap: 8px; justify-content: center;
+    margin: 14px 20px 0; padding: 10px; border-radius: 10px;
+    background: #EEF6FF; color: #2F6FED; font-size: 12px; font-weight: 600;
+  }
+
+  /* ===== PC 대표 레이아웃 (컨테이너 폭 ≥ 720px) ===== */
+  @container (min-width: 720px) {
+    .hero { padding: 52px 40px 12px; }
+    .hero h1 { font-size: 40px; line-height: 1.25; }
+    .hero p { font-size: 17px; margin-top: 12px; }
+    .notion-hint { max-width: 640px; margin: 22px 40px 0; font-size: 14px; }
+
+    section { margin-top: 48px; }
+    .sec-head { padding: 0 40px 18px; }
+    .sec-head h2 { font-size: 22px; }
+    .sec-head .more { font-size: 14px; }
+
+    /* 영상: 캐러셀 → 2열 그리드 (영상 4개 2×2) */
+    .carousel__track {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 20px; padding: 0 40px; overflow: visible;
+    }
+    .video-card { flex: none; }
+    .video-card .meta h3 { font-size: 16px; }
+    .dots { display: none; }
+
+    /* 인터뷰: 2열 */
+    .interview { padding: 0 40px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+
+    /* 인스타: 6열 */
+    .insta-grid { grid-template-columns: repeat(6, 1fr); gap: 12px; padding: 0 40px; }
+    .insta-embeds { grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 0 40px; }
+    .igwall { grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 0 40px; }
+    .insta-cta { max-width: 320px; margin: 22px 40px 0; padding: 15px; font-size: 15px; }
+
+    .banner {
+      margin: 48px 40px 0; padding: 34px 40px;
+      display: flex; flex-direction: column; align-items: flex-start;
+    }
+    .banner h3 { font-size: 24px; }
+    .banner p { font-size: 15px; }
+    .foot { font-size: 12px; margin-top: 44px; }
+
+    .section-divider { margin: 42px 40px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+  <!-- 상단 배너 (7번) -->
+  <a class="promo promo--top" href="https://campaign2.naver.com/npay/npayconnect/" target="_blank" rel="noopener" aria-label="pay connect — 손님을 부르는 기술">
+    <svg class="promo__art" viewBox="0 0 1632 225" role="img" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="promoBgTop" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#030405"/>
+          <stop offset="1" stop-color="#252729"/>
+        </linearGradient>
+      </defs>
+      <rect width="1632" height="225" fill="url(#promoBgTop)"/>
+      <circle cx="113" cy="112.5" r="51" fill="#00E35F"/>
+      <text x="113" y="130" text-anchor="middle" fill="#050505" font-size="56" font-weight="500" font-family="Arial, Helvetica, sans-serif">pay</text>
+      <text x="178" y="130" fill="#F7F8F9" font-size="64" font-weight="700" letter-spacing="-2" font-family="Arial, Helvetica, sans-serif">connect</text>
+      <line x1="488" y1="112.5" x2="1125" y2="112.5" stroke="#B7B9BB" stroke-width="1.4"/>
+      <path d="M880 225 C918 118 985 43 1056 0" fill="none" stroke="#D3D5D6" stroke-width="1.4"/>
+      <rect x="1125" y="60" width="445" height="105" rx="25" fill="#00E35F"/>
+      <text x="1347.5" y="130" text-anchor="middle" fill="#050505" font-size="49" font-weight="800" letter-spacing="-2" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">손님을 부르는 기술</text>
+    </svg>
+  </a>
+  <!-- 히어로 -->
+  <div class="hero">
+    <h1 style="border-radius: 3px;">진짜 사장님, 진짜 손님의<br><b>커넥트 사용 후기</b></h1>
+    <p style="border-radius: 3px;">영상·인터뷰·인스타그램에서 커넥트를 쓰는 생생한 이야기를 만나보세요.</p>
+  </div>
+
+  <!-- 후기 영상 캐러셀 (네이버TV 임베드) -->
+  <section>
+    <div class="sec-head">
+      <h2 style="border-radius: 3px;">🎬 Npay Connect 영상</h2>
+    </div>
+    <div class="carousel">
+      <div class="carousel__track" id="videoTrack">
+        <article class="video-card">
+          <div class="frame">
+            <iframe src="https://tv.naver.com/embed/88147319" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="사장님, 이제 본업에만 집중하세요"></iframe>
+          </div>
+          <div class="meta">
+            <span class="tag">사장님 스토리</span>
+            <h3>사장님, 이제 본업에만 집중하세요</h3>
+            <p>네이버페이(Npay) 커넥트</p>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="frame">
+            <iframe src="https://tv.naver.com/embed/88147173" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="리뷰가 쌓이는 확실한 기술"></iframe>
+          </div>
+          <div class="meta">
+            <span class="tag">커넥트 소개</span>
+            <h3>리뷰가 쌓이는 확실한 기술</h3>
+            <p>네이버페이(Npay) 커넥트</p>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="frame">
+            <iframe src="https://tv.naver.com/embed/89926295" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Npay biz &amp; connect in 코리아 핀테크위크 2025"></iframe>
+          </div>
+          <div class="meta">
+            <span class="tag">현장 스케치</span>
+            <h3>Npay biz &amp; connect in 코리아 핀테크위크 2025</h3>
+            <p>네이버TV</p>
+          </div>
+        </article>
+        <article class="video-card">
+          <div class="frame">
+            <iframe src="https://tv.naver.com/embed/89925856" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Npay 커넥트 in 2025 서울카페쇼"></iframe>
+          </div>
+          <div class="meta">
+            <span class="tag">현장 스케치</span>
+            <h3>Npay 커넥트 in 2025 서울카페쇼</h3>
+            <p>네이버TV</p>
+          </div>
+        </article>
+      </div>
+      <div class="dots" id="videoDots">
+        <span class="on"></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 인터뷰 카드 -->
+  <section>
+    <div class="sec-head">
+      <h2 style="border-radius: 3px;">🎙️ 인터뷰</h2>
+    </div>
+    <div class="interview">
+      <div class="interview__item">
+        <div class="avatar">🥐</div>
+        <div class="txt">
+          <div class="q">Q. 커넥트 도입 후 가장 큰 변화는?</div>
+          <h3>김00 · 베이커리 대표</h3>
+          <p>“결제만 해도 네이버 리뷰가 자연스럽게 쌓이고, 포인트 적립 덕분에 단골 손님이 눈에 띄게 늘었어요.”</p>
+        </div>
+      </div>
+      <div class="interview__item">
+        <div class="avatar">☕</div>
+        <div class="txt">
+          <div class="q">Q. 매장 운영이 어떻게 편해졌나요?</div>
+          <h3>이00 · 카페 대표</h3>
+          <p>“미니 키오스크로 손님이 직접 주문·결제하고, N주문으로 자리에서 바로 주문받으니 피크타임에도 여유가 생겼어요.”</p>
+        </div>
+      </div>
+      <div class="interview__item">
+        <div class="avatar">🍽️</div>
+        <div class="txt">
+          <div class="q">Q. 재방문을 늘리는 비결은?</div>
+          <h3>박00 · 음식점 대표</h3>
+          <p>“쿠폰을 커넥트에 연동해두니 손님이 알아서 다시 찾아오고, 기기가 가로·세로 다 놓을 수 있어 좁은 카운터에도 딱 맞았어요.”</p>
+        </div>
+      </div>
+      <div class="interview__item">
+        <div class="avatar">💇</div>
+        <div class="txt">
+          <div class="q">Q. 손님 관리가 편해졌나요?</div>
+          <h3>최00 · 미용실 대표</h3>
+          <p>“예약·결제하면서 포인트가 쌓이고 리뷰까지 남아 신규 손님이 늘었어요. 기기 디자인도 깔끔해 인테리어와 잘 어울려요.”</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 공식 인스타 (계정 전체 자동 피드 위젠) -->
+  <section>
+    <div class="sec-head">
+      <h2 class="insta-head"><span class="ig"></span> 공식 인스타그램</h2>
+      <a class="more" href="https://www.instagram.com/npaybiz_official" target="_blank" rel="noopener">@npaybiz_official</a>
+    </div>
+
+    <!-- ⬇️ 위젯 마운트 지점: data-behold-id 값만 교체하면 @npaybiz_official 피드가 자동 표시됩니다. -->
+    <div class="insta-feed" id="instaFeed">
+      <!--
+        ===== 실제 연결 (Behold 기준, 약 2분) =====
+        대상 계정: https://www.instagram.com/npaybiz_official  (@npaybiz_official)
+        1) behold.so 가입(무료) → Instagram 으로 로그인 → @npaybiz_official 연결
+        2) 위젯(Feed) 생성 → 대시보드에서 Widget ID 복사 (예: aBc123XyZ)
+        3) 아래 data-behold-id="PUT-YOUR-BEHOLD-WIDGET-ID-HERE" 의 값을 복사한 ID로 교체
+           → 저장하면 미리보기가 실제 피드로 자동 전환됩니다 (아래 스크립트가 처리).
+        ※ 다른 서비스를 쓸 경우(EmbedSocial/SnapWidget/Elfsight)도 이 자리에 스니펫을 넣으면 됩니다.
+      -->
+      <div id="beholdMount" data-behold-id="PUT-YOUR-BEHOLD-WIDGET-ID-HERE"></div>
+
+      <!-- 실제 @npaybiz_official 게시물을 3:4 클린 프레임으로 표시 (헤더·좋아요·댓글 UI는 크롭됨). 프레임을 클릭하면 그 안에서 영상이 재생됩니다.
+           ▶ 게시물 교체/추가: <iframe src> 의 코드만 바꾸면 됩니다 (예: .../p/코드/embed/ 또는 .../reel/코드/embed/)
+           ▶ Behold ID 입력 시 이 영역은 자동 숨김. -->
+      <div class="igwall" id="instaPreview">
+        <div class="igcell"><iframe src="https://www.instagram.com/p/DZNKunaiQ18/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 게시물 1"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DZltKjCTmDL/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 2"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DYeLNXjOpJy/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 3"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DYeKtK3RWWd/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 4"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DZls62JT7SU/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 5"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DZlq2B6T00I/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 6"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DZSKH8UTku6/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 7"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DYgx0E-R5o2/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 8"></iframe></div>
+        <div class="igcell"><iframe src="https://www.instagram.com/reel/DYeJXpDxLxL/embed/" loading="lazy" scrolling="no" allowtransparency="true" allowfullscreen title="공식 인스타 릴스 9"></iframe></div>
+      </div>
+
+      <!--
+        [대안] 공식 embed.js 카드형이 필요하면 아래 블록을 #instaPreview 대신 사용 (인스타 카드 UI가 붙음):
+        <div class="insta-embeds" id="instaPreview">
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DZNKunaiQ18/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DZltKjCTmDL/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DYeLNXjOpJy/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DYeKtK3RWWd/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DZls62JT7SU/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DZlq2B6T00I/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DZSKH8UTku6/" data-instgrm-version="14"></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DYgx0E-R5o2/" data-instgrm-version="14"></blockquote>
+        </div>
+        <script async src="https://www.instagram.com/embed.js"></script>
+      -->
+    </div>
+  </section>
+
+  <!-- 네이버페이 그린 구분선 -->
+  <div class="section-divider"></div>
+
+  <!-- 하단 배너 2종: 상담 신청 → 브랜드 배너 -->
+  <div class="promo-stack">
+    <a class="promo" href="https://campaign2.naver.com/npay/npayconnect/" target="_blank" rel="noopener" aria-label="지금 바로 커넥트 설치 상담 신청하기">
+      <svg class="promo__art promo__art--cta" viewBox="0 0 1632 1010" role="img" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="promoCtaBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#06100B"/>
+            <stop offset="1" stop-color="#17201B"/>
+          </linearGradient>
+        </defs>
+        <rect width="1632" height="1010" fill="url(#promoCtaBg)"/>
+        <text x="105" y="205" font-size="96" font-weight="800" letter-spacing="-5" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">
+          <tspan fill="#F7F8F9">지금 바로 </tspan><tspan fill="#00E35F">커넥트</tspan>
+        </text>
+        <text x="105" y="325" font-size="96" font-weight="800" letter-spacing="-5" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">
+          <tspan fill="#00E35F">설치 상담</tspan><tspan fill="#F7F8F9">을 신청하세요</tspan>
+        </text>
+        <text x="105" y="448" fill="#B7BDB9" font-size="48" font-weight="500" letter-spacing="-2" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">한 발 앞선 매장이 되는 쉬운 방법</text>
+        <rect x="105" y="590" width="1422" height="210" rx="34" fill="#00E35F"/>
+        <text x="816" y="723" text-anchor="middle" fill="#07100B" font-size="66" font-weight="800" letter-spacing="-3" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">상담 신청하기  〉</text>
+        <text x="105" y="925" fill="#9DA59F" font-size="40" font-weight="500" letter-spacing="-1.5" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">신청 후 담당 상담원이 연락드려 설치 가능 일정을 안내해 드립니다.</text>
+      </svg>
+    </a>
+    <a class="promo" href="https://campaign2.naver.com/npay/npayconnect/" target="_blank" rel="noopener" aria-label="pay connect — 손님을 부르는 기술">
+      <svg class="promo__art" viewBox="0 0 1632 225" role="img" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="promoBgBottom" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#030405"/>
+            <stop offset="1" stop-color="#252729"/>
+          </linearGradient>
+        </defs>
+        <rect width="1632" height="225" fill="url(#promoBgBottom)"/>
+        <circle cx="113" cy="112.5" r="51" fill="#00E35F"/>
+        <text x="113" y="130" text-anchor="middle" fill="#050505" font-size="56" font-weight="500" font-family="Arial, Helvetica, sans-serif">pay</text>
+        <text x="178" y="130" fill="#F7F8F9" font-size="64" font-weight="700" letter-spacing="-2" font-family="Arial, Helvetica, sans-serif">connect</text>
+        <line x1="488" y1="112.5" x2="1125" y2="112.5" stroke="#B7B9BB" stroke-width="1.4"/>
+        <path d="M880 225 C918 118 985 43 1056 0" fill="none" stroke="#D3D5D6" stroke-width="1.4"/>
+        <rect x="1125" y="60" width="445" height="105" rx="25" fill="#00E35F"/>
+        <text x="1347.5" y="130" text-anchor="middle" fill="#050505" font-size="49" font-weight="800" letter-spacing="-2" font-family="Apple SD Gothic Neo, Noto Sans KR, sans-serif">손님을 부르는 기술</text>
+      </svg>
+    </a>
+  </div>
+
+  </div><!-- /.stage -->
+
+<script>
+  // ===== 인스타그램 위젯(Behold) 자동 연결 =====
+  (function () {
+    var mount = document.getElementById('beholdMount');
+    var preview = document.getElementById('instaPreview');
+    var note = document.getElementById('instaNote');
+    var TOKEN = 'PUT-YOUR-BEHOLD-WIDGET-ID-HERE';
+    var id = mount && mount.getAttribute('data-behold-id');
+    if (id && id !== TOKEN) {
+      // 실제 위젯 ID가 입력됨 → Behold 위젯 로드 + 미리보기·안내 숨김
+      var s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'https://w.behold.so/widget.js';
+      document.head.appendChild(s);
+      if (preview) preview.style.display = 'none';
+      if (note) note.style.display = 'none';
+    }
+  })();
+</script>
+
+<script>
+  // 캐러셀 도트 인디케이터 동기화
+  (function () {
+    var track = document.getElementById('videoTrack');
+    var dots = document.querySelectorAll('#videoDots span');
+    if (!track) return;
+    track.addEventListener('scroll', function () {
+      var i = Math.round(track.scrollLeft / (track.scrollWidth / dots.length));
+      i = Math.max(0, Math.min(dots.length - 1, i));
+      dots.forEach(function (d, idx) { d.classList.toggle('on', idx === i); });
+    }, { passive: true });
+  })();
+</script>
+
+</body></html>
